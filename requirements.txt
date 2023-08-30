@@ -1,0 +1,2 @@
+-e git+https://github.com/aoki-h-jp/binance-bulk-downloader.git#egg=binance-bulk-downloader
+-e git+https://github.com/aoki-h-jp/bybit-bulk-downloader.git#egg=bybit-bulk-downloader

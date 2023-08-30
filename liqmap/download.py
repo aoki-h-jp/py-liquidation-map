@@ -15,6 +15,7 @@ class BinanceAggTradesDownload(BinanceBulkDownloader):
     """
     Download aggTrades from Binance
     """
+
     def __init__(
         self,
         destination_dir=".",
@@ -81,6 +82,7 @@ class BybitAggTradesDownloader(BybitBulkDownloader):
     """
     Download aggTrades from Bybit
     """
+
     def __init__(
         self,
         destination_dir=".",
@@ -129,7 +131,12 @@ class BybitAggTradesDownloader(BybitBulkDownloader):
         """
         download_prefixes = [
             "/".join(
-                [self.super._BYBIT_DATA_DOWNLOAD_BASE_URL, "trading", self._symbol, self._make_filename(date=dt)]
+                [
+                    self.super._BYBIT_DATA_DOWNLOAD_BASE_URL,
+                    "trading",
+                    self._symbol,
+                    self._make_filename(date=dt),
+                ]
             )
             for dt in self._make_date_range()
         ]

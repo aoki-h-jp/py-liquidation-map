@@ -1,5 +1,6 @@
 # import standard libraries
 import datetime
+import math
 
 # import third-party libraries
 import matplotlib.pyplot as plt
@@ -9,9 +10,9 @@ from exceptions import ExchangeNotSupportedError
 from rich.progress import track
 
 
-class HistoricalDraw:
+class HistoricalMapping:
     """
-    Draw liquidation map from historical data.
+    Map liquidation map from historical data.
     """
 
     def __init__(
@@ -192,8 +193,12 @@ class HistoricalDraw:
 
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(9, 9))
         # draw price on ax1
-        for i, dt in enumerate(df_buy.index):
-            ax1.scatter(dt, df_buy.iloc[i, 1], s=200, facecolor="None", edgecolors="g")
+        for i, dt in enumerate(df_buy["timestamp"]):
+            label = "large BUY LONG" if i == 0 else None
+            ax1.scatter(dt, df_buy.iloc[i, 1], s=100, facecolor="None", edgecolors="b", label=label)
+        for i, dt in enumerate(df_sell["timestamp"]):
+            label = "large SELL SHORT" if i == 0 else None
+            ax1.scatter(dt, df_sell.iloc[i, 1], s=100, facecolor="None", edgecolors="r", label=label)
 
         ax1.plot(df_merged["timestamp"], df_merged["price"], c="k", label="price")
         ax1.set_xlabel("datetime")
@@ -209,6 +214,7 @@ class HistoricalDraw:
         if mode == "gross_value":
             title += f"\nthreshold: >= {threshold_gross_value} [USDT]"
         ax1.set_title(title)
+        ax1.legend()
 
         # Buy liquidation map on ax2
         df_losscut_10x = pd.DataFrame(columns=["price", "amount"])
@@ -249,7 +255,7 @@ class HistoricalDraw:
         ]
         labels = ["10x Leveraged", "25x Leveraged", "50x Leveraged", "100x Leveraged"]
         colors = ["r", "g", "b", "y"]
-        tick_degits = 0
+        tick_degits = 2 - math.ceil(math.log10(df_merged["price"].max() - df_merged["price"].min()))
         max_amount = 0
         for i, df_losscut in enumerate(df_losscut_list):
             df_losscut = df_losscut[df_losscut["price"] <= current_price]
@@ -257,7 +263,7 @@ class HistoricalDraw:
                 (
                     round(df_losscut["price"].max(), tick_degits)
                     - round(df_losscut["price"].min(), tick_degits)
-                )
+                ) * 10 ** tick_degits
             )
             bins = [
                 round(
@@ -275,6 +281,7 @@ class HistoricalDraw:
                 height=10**-tick_degits,
                 color=colors[i],
                 label=labels[i],
+                alpha=0.5
             )
             if agg_df["amount"].max() > max_amount:
                 max_amount = agg_df["amount"].max()
@@ -325,7 +332,7 @@ class HistoricalDraw:
         ]
         labels = ["10x Leveraged", "25x Leveraged", "50x Leveraged", "100x Leveraged"]
         colors = ["r", "g", "b", "y"]
-        tick_degits = 0
+        tick_degits = 2 - math.ceil(math.log10(df_merged["price"].max() - df_merged["price"].min()))
         max_amount = 0
         for i, df_losscut in enumerate(df_losscut_list):
             df_losscut = df_losscut[df_losscut["price"] >= current_price]
@@ -333,7 +340,7 @@ class HistoricalDraw:
                 (
                     round(df_losscut["price"].max(), tick_degits)
                     - round(df_losscut["price"].min(), tick_degits)
-                )
+                ) * 10 ** tick_degits
             )
             bins = [
                 round(
@@ -350,11 +357,12 @@ class HistoricalDraw:
                 agg_df["amount"],
                 height=10**-tick_degits,
                 color=colors[i],
+                alpha=0.5,
             )
             if agg_df["amount"].max() > max_amount:
                 max_amount = agg_df["amount"].max()
 
-        ax2.hlines(y=current_price, xmin=0, xmax=max_amount, linestyle="-.", colors="k")
+        ax2.annotate("", xytext=(max_amount, current_price), xy=(0, current_price), arrowprops=dict(arrowstyle="->,head_length=1,head_width=0.5", lw=2, linestyle="dashed"), label="Current Price")
         ax2.set_title("Estimated Liquidation Amount")
         ax2.set_xlabel("Amount")
         ax2.tick_params(axis="x", labelrotation=45)

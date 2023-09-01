@@ -159,9 +159,9 @@ class HistoricalMapping:
         if x < 1e6:
             return str(x)
         elif x < 1e9:
-            return '{:.1f}M'.format(x * 1e-6)
+            return "{:.1f}M".format(x * 1e-6)
         else:
-            return '{:.1f}B'.format(x * 1e-9)
+            return "{:.1f}B".format(x * 1e-9)
 
     def liquidation_map_from_historical(
         self, mode="gross_value", threshold_gross_value=100000
@@ -420,7 +420,7 @@ class HistoricalMapping:
             )
 
     def liquidation_map_depth_from_historical(
-            self, mode="gross_value", threshold_gross_value=100000
+        self, mode="gross_value", threshold_gross_value=100000
     ) -> None:
         """
         Draw liquidation map depth from historical data
@@ -501,13 +501,16 @@ class HistoricalMapping:
 
         current_price = df_merged.iloc[-1, 1]
 
-        df_depth_buy = pd.concat([df_losscut_10x, df_losscut_25x, df_losscut_50x, df_losscut_100x], ignore_index=True)
+        df_depth_buy = pd.concat(
+            [df_losscut_10x, df_losscut_25x, df_losscut_50x, df_losscut_100x],
+            ignore_index=True,
+        )
         df_depth_buy = df_depth_buy.sort_values(by="price", ascending=False)
         df_depth_buy = df_depth_buy[df_depth_buy["price"] <= current_price]
         df_depth_buy = df_depth_buy.reset_index(drop=True)
         df_depth_buy["price"] = df_depth_buy["price"].astype(float)
         df_depth_buy["cumsum"] = df_depth_buy["amount"].cumsum().astype(float)
-        ax1.plot(df_depth_buy["price"], df_depth_buy["cumsum"], label="buy", c='b')
+        ax1.plot(df_depth_buy["price"], df_depth_buy["cumsum"], label="buy", c="b")
 
         df_losscut_list = [
             df_losscut_10x,
@@ -525,17 +528,17 @@ class HistoricalMapping:
             df_losscut = df_losscut[df_losscut["price"] <= current_price]
             g_ids = int(
                 (
-                        round(df_losscut["price"].max(), tick_degits)
-                        - round(df_losscut["price"].min(), tick_degits)
+                    round(df_losscut["price"].max(), tick_degits)
+                    - round(df_losscut["price"].min(), tick_degits)
                 )
-                * 10 ** tick_degits
+                * 10**tick_degits
             )
             bins = [
                 round(
                     round(df_losscut["price"].min(), tick_degits)
-                    + i * 10 ** -tick_degits,
+                    + i * 10**-tick_degits,
                     tick_degits,
-                    )
+                )
                 for i in range(g_ids)
             ]
             df_losscut["group_id"] = pd.cut(df_losscut["price"], bins=bins)
@@ -543,7 +546,7 @@ class HistoricalMapping:
             ax2.bar(
                 x=[f.left for f in agg_df.index],
                 height=agg_df["amount"],
-                width=10 ** -tick_degits,
+                width=10**-tick_degits,
                 color=colors[i],
                 label=labels[i],
                 alpha=0.5,
@@ -589,12 +592,15 @@ class HistoricalMapping:
 
         current_price = df_merged.iloc[-1, 1]
 
-        df_depth_sell = pd.concat([df_losscut_10x, df_losscut_25x, df_losscut_50x, df_losscut_100x], ignore_index=True)
+        df_depth_sell = pd.concat(
+            [df_losscut_10x, df_losscut_25x, df_losscut_50x, df_losscut_100x],
+            ignore_index=True,
+        )
         df_depth_sell = df_depth_sell.sort_values(by="price")
         df_depth_sell = df_depth_sell[df_depth_sell["price"] >= current_price]
         df_depth_sell = df_depth_sell.reset_index(drop=True)
         df_depth_sell["cumsum"] = df_depth_sell["amount"].cumsum()
-        ax1.plot(df_depth_sell["price"], df_depth_sell["cumsum"], label="sell", c='r')
+        ax1.plot(df_depth_sell["price"], df_depth_sell["cumsum"], label="sell", c="r")
 
         df_losscut_list = [
             df_losscut_10x,
@@ -612,17 +618,17 @@ class HistoricalMapping:
             df_losscut = df_losscut[df_losscut["price"] >= current_price]
             g_ids = int(
                 (
-                        round(df_losscut["price"].max(), tick_degits)
-                        - round(df_losscut["price"].min(), tick_degits)
+                    round(df_losscut["price"].max(), tick_degits)
+                    - round(df_losscut["price"].min(), tick_degits)
                 )
-                * 10 ** tick_degits
+                * 10**tick_degits
             )
             bins = [
                 round(
                     round(df_losscut["price"].min(), tick_degits)
-                    + i * 10 ** -tick_degits,
+                    + i * 10**-tick_degits,
                     tick_degits,
-                    )
+                )
                 for i in range(g_ids)
             ]
             df_losscut["group_id"] = pd.cut(df_losscut["price"], bins=bins)
@@ -630,7 +636,7 @@ class HistoricalMapping:
             ax2.bar(
                 x=[f.left for f in agg_df.index],
                 height=agg_df["amount"],
-                width=10 ** -tick_degits,
+                width=10**-tick_degits,
                 color=colors[i],
                 alpha=0.5,
             )

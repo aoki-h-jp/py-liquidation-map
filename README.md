@@ -29,7 +29,8 @@ mapping.liquidation_map_from_historical(
 )
 ```
 ### Output
-![image](img/BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_gross_value_100000.png)
+![BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_gross_value_100000.png](img%2FBTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_gross_value_100000.png)
+
 ### Visualize liquidation map depth
 ```python
 from liqmap.mapping import HistoricalMapping
@@ -48,7 +49,64 @@ mapping.liquidation_map_depth_from_historical(
 ```
 
 ### Output
-![image](img/BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_gross_value_100000_depth.png)
+![BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_gross_value_100000_depth.png](img%2FBTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_gross_value_100000_depth.png)
+
+## Examples
+### top_n mode
+mode="top_n": draw liquidation map from top n trades.
+
+threshold_top_n=100 means draw liquidation map from top 100 large trades.
+
+```python
+from liqmap.mapping import HistoricalMapping
+
+mapping = HistoricalMapping(
+    start_datetime='2023-08-01 00:00:00',
+    end_datetime='2023-08-01 06:00:00',
+    symbol='BTCUSDT',
+    exchange='binance',
+)
+
+mapping.liquidation_map_from_historical(
+    mode="top_n",
+    threshold_top_n=100
+)
+
+mapping.liquidation_map_depth_from_historical(
+    mode="top_n",
+    threshold_top_n=100
+)
+```
+![BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_top_n_100.png](img%2FBTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_top_n_100.png)
+![BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_top_n_100_depth.png](img%2FBTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_top_n_100_depth.png)
+
+### portion mode
+mode="portion": draw liquidation map from top n% trades.
+
+threshold_portion=0.01 means draw liquidation map from top 1% large trades.
+
+```python
+from liqmap.mapping import HistoricalMapping
+
+mapping = HistoricalMapping(
+    start_datetime='2023-08-01 00:00:00',
+    end_datetime='2023-08-01 06:00:00',
+    symbol='BTCUSDT',
+    exchange='binance',
+)
+
+mapping.liquidation_map_from_historical(
+    mode="portion",
+    threshold_portion=0.01
+)
+
+mapping.liquidation_map_depth_from_historical(
+    mode="portion",
+    threshold_portion=0.01
+)
+```
+![BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_portion_0.01.png](img%2FBTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_portion_0.01.png)
+![BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_portion_0.01_depth.png](img%2FBTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_portion_0.01_depth.png)
 
 ## If you want to report a bug or request a feature
 Please create an issue on this repository!

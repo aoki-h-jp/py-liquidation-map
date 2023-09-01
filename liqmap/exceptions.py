@@ -9,3 +9,11 @@ class ExchangeNotSupportedError(Exception):
     """
 
     pass
+
+
+class InvalidParamError(Exception):
+    """
+    Exception raised when invalid param is passed
+    """
+
+    pass

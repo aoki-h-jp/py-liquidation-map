@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 from download import BinanceAggTradesDownload, BybitAggTradesDownloader
-from exceptions import ExchangeNotSupportedError
+from exceptions import ExchangeNotSupportedError, InvalidParamError
 from rich.progress import track
 
 warnings.filterwarnings("ignore")
@@ -163,18 +163,11 @@ class HistoricalMapping:
         else:
             return "{:.1f}B".format(x * 1e-9)
 
-    def liquidation_map_from_historical(
-        self, mode="gross_value", threshold_gross_value=100000
-    ) -> None:
+    def _make_merged_dataframe(self) -> pd.DataFrame:
         """
-        Draw liquidation map from historical data
-        :param mode: draw mode
-        :param threshold_gross_value:
+        Make merged dataframe
         :return:
         """
-        # Downloading historical data
-        self._download()
-
         # Formatting historical data
         df_merged = pd.DataFrame()
         for prefix in track(self._make_prefix_list(), description="Formatting data"):
@@ -186,24 +179,85 @@ class HistoricalMapping:
         df_merged = df_merged[df_merged["timestamp"] <= self._end_datetime]
         df_merged = df_merged[df_merged["timestamp"] >= self._start_datetime]
 
-        # Visualize liquidation map
-        # mode: gross_value
-        df_buy = df_merged[df_merged["side"] == "Buy"]
-        df_sell = df_merged[df_merged["side"] == "Sell"]
+        return df_merged
 
-        df_buy = df_buy[df_buy["amount"] >= threshold_gross_value]
-        df_sell = df_sell[df_sell["amount"] >= threshold_gross_value]
+
+    def _make_buy_dataframe(self) -> pd.DataFrame:
+        """
+        Make buy dataframe
+        :return: pd.DataFrame
+        """
+        df_merged = self._make_merged_dataframe()
+        df_buy = df_merged[df_merged["side"] == "Buy"]
 
         df_buy["LossCut100x"] = df_buy["price"] * 0.99
         df_buy["LossCut50x"] = df_buy["price"] * 0.98
         df_buy["LossCut25x"] = df_buy["price"] * 0.96
         df_buy["LossCut10x"] = df_buy["price"] * 0.90
 
+        return df_buy
+
+    def _make_sell_dataframe(self) -> pd.DataFrame:
+        """
+        Make buy dataframe
+        :return: pd.DataFrame
+        """
+        df_merged = self._make_merged_dataframe()
+        df_sell = df_merged[df_merged["side"] == "Sell"]
+
         df_sell["LossCut100x"] = df_sell["price"] * 1.01
         df_sell["LossCut50x"] = df_sell["price"] * 1.02
         df_sell["LossCut25x"] = df_sell["price"] * 1.04
         df_sell["LossCut10x"] = df_sell["price"] * 1.10
 
+        return df_sell
+
+
+    def liquidation_map_from_historical(
+        self, mode="gross_value", threshold_gross_value=100000, threshold_top_n=100, threshold_portion=0.01
+    ) -> None:
+        """
+        Draw liquidation map from historical data
+        :param mode: draw mode "gross_value", "top_n", "portion" is available.
+        "gross_value": draw liquidation map from above threshold gross value trades
+        "top_n": draw liquidation map from top n trades
+        "portion": draw liquidation map from top n% trades
+        example:
+        threshold_gross_value=100000 means draw liquidation map from trades whose gross value is above 100000 USDT.
+        threshold_top_n=100 means draw liquidation map from top 100 large trades.
+        threshold_portion=0.01 means draw liquidation map from top 1% large trades.
+        :param threshold_gross_value: threshold for gross value
+        :param threshold_top_n: threshold for top n
+        :param threshold_portion: threshold for top n%
+        :return:
+        """
+        # Downloading historical data
+        self._download()
+
+        # Formatting historical data
+        df_merged = self._make_merged_dataframe()
+        df_buy = self._make_buy_dataframe()
+        df_sell = self._make_sell_dataframe()
+
+        # mode: gross_value
+        if mode == "gross_value":
+            df_buy = df_buy[df_buy["amount"] >= threshold_gross_value]
+            df_sell = df_sell[df_sell["amount"] >= threshold_gross_value]
+        elif mode == "top_n":
+            print("passed")
+            df_buy = df_buy.sort_values(by="amount", ascending=False)
+            df_buy = df_buy.iloc[:threshold_top_n]
+            df_sell = df_sell.sort_values(by="amount", ascending=False)
+            df_sell = df_sell.iloc[:threshold_top_n]
+        elif mode == "portion":
+            df_buy = df_buy.sort_values(by="amount", ascending=False)
+            df_buy = df_buy.iloc[:int(len(df_buy) * threshold_portion)]
+            df_sell = df_sell.sort_values(by="amount", ascending=False)
+            df_sell = df_sell.iloc[:int(len(df_sell) * threshold_portion)]
+        else:
+            raise InvalidParamError(f"mode {mode} is not supported.")
+
+        # Visualize liquidation map
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(9, 9))
         # draw price on ax1
         for i, dt in enumerate(df_buy["timestamp"]):
@@ -317,7 +371,16 @@ class HistoricalMapping:
                 max_amount = agg_df["amount"].max()
 
         # Save liquidation map data as csv
-        save_title = f"{self._symbol}_{self._start_datetime.replace(' ', '_').replace(':', '-')}-{self._end_datetime.replace(' ', '_').replace(':', '-')}_{mode}_{threshold_gross_value}.png"
+        save_title = f"{self._symbol}_{self._start_datetime.replace(' ', '_').replace(':', '-')}-{self._end_datetime.replace(' ', '_').replace(':', '-')}"
+        if mode == "gross_value":
+            save_title += f"_gross_value_{threshold_gross_value}.png"
+        elif mode == "top_n":
+            save_title += f"_top_n_{threshold_top_n}.png"
+        elif mode == "portion":
+            save_title += f"_portion_{threshold_portion}.png"
+        else:
+            raise InvalidParamError(f"mode {mode} is not supported.")
+
         for df_l, label in zip(df_losscut_list, labels):
             df_l.to_csv(
                 f"{save_title.replace('.png', '')}_{label.replace(' ','_')}_buy.csv"
@@ -420,46 +483,49 @@ class HistoricalMapping:
             )
 
     def liquidation_map_depth_from_historical(
-        self, mode="gross_value", threshold_gross_value=100000
+        self, mode="gross_value", threshold_gross_value=10000, threshold_top_n=100, threshold_portion=0.010
     ) -> None:
         """
         Draw liquidation map depth from historical data
-        :param mode:
-        :param threshold_gross_value:
+        :param mode: draw mode "gross_value", "top_n", "portion" is available.
+        "gross_value": draw liquidation map from above threshold gross value trades
+        "top_n": draw liquidation map from top n trades
+        "portion": draw liquidation map from top n% trades
+        example:
+        threshold_gross_value=100000 means draw liquidation map from trades whose gross value is above 100000 USDT.
+        threshold_top_n=100 means draw liquidation map from top 100 large trades.
+        threshold_portion=0.01 means draw liquidation map from top 1% large trades.
+        :param threshold_gross_value: threshold for gross value
+        :param threshold_top_n: threshold for top n
+        :param threshold_portion: threshold for top n%
         :return:
         """
         # Downloading historical data
         self._download()
 
         # Formatting historical data
-        df_merged = pd.DataFrame()
-        for prefix in track(self._make_prefix_list(), description="Formatting data"):
-            df_prefix = self._format_aggtrade_dataframe(prefix)
-            df_merged = pd.concat([df_merged, df_prefix])
+        df_merged = self._make_merged_dataframe()
+        df_buy = self._make_buy_dataframe()
+        df_sell = self._make_sell_dataframe()
 
-        df_merged = df_merged.sort_values(by="timestamp")
-        df_merged = df_merged.reset_index(drop=True)
-        df_merged = df_merged[df_merged["timestamp"] <= self._end_datetime]
-        df_merged = df_merged[df_merged["timestamp"] >= self._start_datetime]
-
-        # Visualize liquidation map
         # mode: gross_value
-        df_buy = df_merged[df_merged["side"] == "Buy"]
-        df_sell = df_merged[df_merged["side"] == "Sell"]
+        if mode == "gross_value":
+            df_buy = df_buy[df_buy["amount"] >= threshold_gross_value]
+            df_sell = df_sell[df_sell["amount"] >= threshold_gross_value]
+        elif mode == "top_n":
+            df_buy = df_buy.sort_values(by="amount", ascending=False)
+            df_buy = df_buy.iloc[:threshold_top_n]
+            df_sell = df_sell.sort_values(by="amount", ascending=False)
+            df_sell = df_sell.iloc[:threshold_top_n]
+        elif mode == "portion":
+            df_buy = df_buy.sort_values(by="amount", ascending=False)
+            df_buy = df_buy.iloc[:int(len(df_buy) * threshold_portion)]
+            df_sell = df_sell.sort_values(by="amount", ascending=False)
+            df_sell = df_sell.iloc[:int(len(df_sell) * threshold_portion)]
+        else:
+            raise InvalidParamError(f"mode {mode} is not supported.")
 
-        df_buy = df_buy[df_buy["amount"] >= threshold_gross_value]
-        df_sell = df_sell[df_sell["amount"] >= threshold_gross_value]
-
-        df_buy["LossCut100x"] = df_buy["price"] * 0.99
-        df_buy["LossCut50x"] = df_buy["price"] * 0.98
-        df_buy["LossCut25x"] = df_buy["price"] * 0.96
-        df_buy["LossCut10x"] = df_buy["price"] * 0.90
-
-        df_sell["LossCut100x"] = df_sell["price"] * 1.01
-        df_sell["LossCut50x"] = df_sell["price"] * 1.02
-        df_sell["LossCut25x"] = df_sell["price"] * 1.04
-        df_sell["LossCut10x"] = df_sell["price"] * 1.10
-
+        # Visualize liquidation map depth
         fig = plt.figure(figsize=(9, 9))
         ax1 = fig.add_subplot(111)
         ax2 = ax1.twinx()
@@ -555,7 +621,17 @@ class HistoricalMapping:
                 max_amount = agg_df["amount"].max()
 
         # Save liquidation map data as csv
-        save_title = f"{self._symbol}_{self._start_datetime.replace(' ', '_').replace(':', '-')}-{self._end_datetime.replace(' ', '_').replace(':', '-')}_{mode}_{threshold_gross_value}_depth.png"
+        save_title = f"{self._symbol}_{self._start_datetime.replace(' ', '_').replace(':', '-')}-{self._end_datetime.replace(' ', '_').replace(':', '-')}"
+        if mode == "gross_value":
+            save_title += f"_gross_value_{threshold_gross_value}_depth.png"
+        elif mode == "top_n":
+            save_title += f"_top_n_{threshold_top_n}_depth.png"
+        elif mode == "portion":
+            save_title += f"_portion_{threshold_portion}_depth.png"
+        else:
+            raise InvalidParamError(f"mode {mode} is not supported.")
+
+
         for df_l, label in zip(df_losscut_list, labels):
             df_l.to_csv(
                 f"{save_title.replace('.png', '')}_{label.replace(' ', '_')}_buy.csv"

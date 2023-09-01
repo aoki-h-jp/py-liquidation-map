@@ -195,10 +195,24 @@ class HistoricalMapping:
         # draw price on ax1
         for i, dt in enumerate(df_buy["timestamp"]):
             label = "large BUY LONG" if i == 0 else None
-            ax1.scatter(dt, df_buy.iloc[i, 1], s=100, facecolor="None", edgecolors="b", label=label)
+            ax1.scatter(
+                dt,
+                df_buy.iloc[i, 1],
+                s=100,
+                facecolor="None",
+                edgecolors="b",
+                label=label,
+            )
         for i, dt in enumerate(df_sell["timestamp"]):
             label = "large SELL SHORT" if i == 0 else None
-            ax1.scatter(dt, df_sell.iloc[i, 1], s=100, facecolor="None", edgecolors="r", label=label)
+            ax1.scatter(
+                dt,
+                df_sell.iloc[i, 1],
+                s=100,
+                facecolor="None",
+                edgecolors="r",
+                label=label,
+            )
 
         ax1.plot(df_merged["timestamp"], df_merged["price"], c="k", label="price")
         ax1.set_xlabel("datetime")
@@ -255,7 +269,9 @@ class HistoricalMapping:
         ]
         labels = ["10x Leveraged", "25x Leveraged", "50x Leveraged", "100x Leveraged"]
         colors = ["r", "g", "b", "y"]
-        tick_degits = 2 - math.ceil(math.log10(df_merged["price"].max() - df_merged["price"].min()))
+        tick_degits = 2 - math.ceil(
+            math.log10(df_merged["price"].max() - df_merged["price"].min())
+        )
         max_amount = 0
         for i, df_losscut in enumerate(df_losscut_list):
             df_losscut = df_losscut[df_losscut["price"] <= current_price]
@@ -263,7 +279,8 @@ class HistoricalMapping:
                 (
                     round(df_losscut["price"].max(), tick_degits)
                     - round(df_losscut["price"].min(), tick_degits)
-                ) * 10 ** tick_degits
+                )
+                * 10**tick_degits
             )
             bins = [
                 round(
@@ -281,7 +298,7 @@ class HistoricalMapping:
                 height=10**-tick_degits,
                 color=colors[i],
                 label=labels[i],
-                alpha=0.5
+                alpha=0.5,
             )
             if agg_df["amount"].max() > max_amount:
                 max_amount = agg_df["amount"].max()
@@ -332,7 +349,9 @@ class HistoricalMapping:
         ]
         labels = ["10x Leveraged", "25x Leveraged", "50x Leveraged", "100x Leveraged"]
         colors = ["r", "g", "b", "y"]
-        tick_degits = 2 - math.ceil(math.log10(df_merged["price"].max() - df_merged["price"].min()))
+        tick_degits = 2 - math.ceil(
+            math.log10(df_merged["price"].max() - df_merged["price"].min())
+        )
         max_amount = 0
         for i, df_losscut in enumerate(df_losscut_list):
             df_losscut = df_losscut[df_losscut["price"] >= current_price]
@@ -340,7 +359,8 @@ class HistoricalMapping:
                 (
                     round(df_losscut["price"].max(), tick_degits)
                     - round(df_losscut["price"].min(), tick_degits)
-                ) * 10 ** tick_degits
+                )
+                * 10**tick_degits
             )
             bins = [
                 round(
@@ -362,7 +382,15 @@ class HistoricalMapping:
             if agg_df["amount"].max() > max_amount:
                 max_amount = agg_df["amount"].max()
 
-        ax2.annotate("", xytext=(max_amount, current_price), xy=(0, current_price), arrowprops=dict(arrowstyle="->,head_length=1,head_width=0.5", lw=2, linestyle="dashed"), label="Current Price")
+        ax2.annotate(
+            "",
+            xytext=(max_amount, current_price),
+            xy=(0, current_price),
+            arrowprops=dict(
+                arrowstyle="->,head_length=1,head_width=0.5", lw=2, linestyle="dashed"
+            ),
+            label="Current Price",
+        )
         ax2.set_title("Estimated Liquidation Amount")
         ax2.set_xlabel("Amount")
         ax2.tick_params(axis="x", labelrotation=45)

@@ -4,6 +4,15 @@
 # py-liquidation-map
 Visualize Liquidation Map from actual execution data. Supports for all historical data from binance and bybit. Receiving orders in real-time via websocket and drawing liquidation maps is being implemented.
 
+## How to Understand a Liquidation Map
+A liquidation map, also known as a "liq map," provides a visual chart of liquidations or liquidation risk in the futures cryptocurrency trading market. It displays liquidations that are predicted based on previous price trends.
+
+When traders engage in trading on unregulated cryptocurrency derivative exchanges, they are constantly exposed to additional risks, namely liquidation risks. When the liquidation price of a trader's position is triggered, their position is forcibly closed by the exchange's risk engine.
+
+The impact on the market is relatively small when a small number of positions are liquidated. However, if thousands of positions with similar liquidation prices are liquidated, the effect on the market price can be significant. Moreover, market buy and sell orders triggered by liquidations can cause rapid price movements, leading to a "cascading effect" where more nearby positions get liquidated. This phenomenon creates substantial price fluctuations (which institutional players often take advantage of as an entry strategy since the rapid injection of liquidity within a short period can meet the demand for institutional large orders).
+
+Different combinations of leverage and time frames depict various clusters of liquidations. The denser and higher the liquidation clusters, the greater their impact on price behavior when reached.
+
 ## Installation
 
 ```bash

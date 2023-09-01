@@ -181,7 +181,6 @@ class HistoricalMapping:
 
         return df_merged
 
-
     def _make_buy_dataframe(self) -> pd.DataFrame:
         """
         Make buy dataframe
@@ -212,9 +211,12 @@ class HistoricalMapping:
 
         return df_sell
 
-
     def liquidation_map_from_historical(
-        self, mode="gross_value", threshold_gross_value=100000, threshold_top_n=100, threshold_portion=0.01
+        self,
+        mode="gross_value",
+        threshold_gross_value=100000,
+        threshold_top_n=100,
+        threshold_portion=0.01,
     ) -> None:
         """
         Draw liquidation map from historical data
@@ -251,9 +253,9 @@ class HistoricalMapping:
             df_sell = df_sell.iloc[:threshold_top_n]
         elif mode == "portion":
             df_buy = df_buy.sort_values(by="amount", ascending=False)
-            df_buy = df_buy.iloc[:int(len(df_buy) * threshold_portion)]
+            df_buy = df_buy.iloc[: int(len(df_buy) * threshold_portion)]
             df_sell = df_sell.sort_values(by="amount", ascending=False)
-            df_sell = df_sell.iloc[:int(len(df_sell) * threshold_portion)]
+            df_sell = df_sell.iloc[: int(len(df_sell) * threshold_portion)]
         else:
             raise InvalidParamError(f"mode {mode} is not supported.")
 
@@ -483,7 +485,11 @@ class HistoricalMapping:
             )
 
     def liquidation_map_depth_from_historical(
-        self, mode="gross_value", threshold_gross_value=10000, threshold_top_n=100, threshold_portion=0.010
+        self,
+        mode="gross_value",
+        threshold_gross_value=10000,
+        threshold_top_n=100,
+        threshold_portion=0.010,
     ) -> None:
         """
         Draw liquidation map depth from historical data
@@ -519,9 +525,9 @@ class HistoricalMapping:
             df_sell = df_sell.iloc[:threshold_top_n]
         elif mode == "portion":
             df_buy = df_buy.sort_values(by="amount", ascending=False)
-            df_buy = df_buy.iloc[:int(len(df_buy) * threshold_portion)]
+            df_buy = df_buy.iloc[: int(len(df_buy) * threshold_portion)]
             df_sell = df_sell.sort_values(by="amount", ascending=False)
-            df_sell = df_sell.iloc[:int(len(df_sell) * threshold_portion)]
+            df_sell = df_sell.iloc[: int(len(df_sell) * threshold_portion)]
         else:
             raise InvalidParamError(f"mode {mode} is not supported.")
 
@@ -630,7 +636,6 @@ class HistoricalMapping:
             save_title += f"_portion_{threshold_portion}_depth.png"
         else:
             raise InvalidParamError(f"mode {mode} is not supported.")
-
 
         for df_l, label in zip(df_losscut_list, labels):
             df_l.to_csv(

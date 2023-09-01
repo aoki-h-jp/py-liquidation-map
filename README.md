@@ -54,6 +54,7 @@ mapping.liquidation_map_depth_from_historical(
 ## Examples
 ### top_n mode
 mode="top_n": draw liquidation map from top n trades.
+
 threshold_top_n=100 means draw liquidation map from top 100 large trades.
 
 ```python
@@ -80,7 +81,8 @@ mapping.liquidation_map_depth_from_historical(
 ![BTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_top_n_100_depth.png](img%2FBTCUSDT_2023-08-01_00-00-00-2023-08-01_06-00-00_top_n_100_depth.png)
 
 ### portion mode
-mode="portion": draw liquidation map from top n% trades
+mode="portion": draw liquidation map from top n% trades.
+
 threshold_portion=0.01 means draw liquidation map from top 1% large trades.
 
 ```python

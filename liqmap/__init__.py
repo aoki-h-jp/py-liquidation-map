@@ -1,4 +1,4 @@
 """
 py-liquidation-map
 """
-from liqmap import download, draw
+from liqmap import download, mapping

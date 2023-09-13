@@ -7,8 +7,8 @@ import warnings
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
-from download import BinanceAggTradesDownload, BybitAggTradesDownloader
-from exceptions import ExchangeNotSupportedError, InvalidParamError
+from liqmap.download import BinanceAggTradesDownload, BybitAggTradesDownloader
+from liqmap.exceptions import ExchangeNotSupportedError, InvalidParamError
 from rich.progress import track
 
 warnings.filterwarnings("ignore")

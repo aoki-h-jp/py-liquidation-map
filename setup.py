@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="py-liquidation-map",
-    version="1.0.0",
+    version="1.0.1",
     description="Visualize Liquidation Map from actual execution data.",
     install_requires=[
         "binance-bulk-downloader @ git+https://github.com/aoki-h-jp/binance-bulk-downloader",
